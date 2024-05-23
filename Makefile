@@ -58,3 +58,7 @@ ray-kind-cluster-down:
 download-gene-list:
 	# https://www.gsea-msigdb.org/gsea/msigdb/cards/KEGG_O_GLYCAN_BIOSYNTHESIS
 	wget -O genes.json "https://www.gsea-msigdb.org/gsea/msigdb/human/download_geneset.jsp?geneSetName=KEGG_O_GLYCAN_BIOSYNTHESIS&fileType=json"
+
+
+ls-braingeneers-s3-bucket:
+	aws --endpoint https://s3-west.nrp-nautilus.io s3 ls --no-verify-ssl  s3://braingeneers
