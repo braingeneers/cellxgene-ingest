@@ -59,6 +59,15 @@ download-gene-list:
 	# https://www.gsea-msigdb.org/gsea/msigdb/cards/KEGG_O_GLYCAN_BIOSYNTHESIS
 	wget -O genes.json "https://www.gsea-msigdb.org/gsea/msigdb/human/download_geneset.jsp?geneSetName=KEGG_O_GLYCAN_BIOSYNTHESIS&fileType=json"
 
+	# WNT Signaling Pathway
+	wget -O genes.json "https://www.gsea-msigdb.org/gsea/msigdb/human/download_geneset.jsp?geneSetName=BIOCARTA_WNT_PATHWAY&fileType=json"
+
+
+	# Mapping between HUGO and ENSEMBLE
+	wget -N "https://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_46/gencode.v46.annotation.gtf.gz"
 
 ls-braingeneers-s3-bucket:
 	aws --endpoint https://s3-west.nrp-nautilus.io s3 ls --no-verify-ssl  s3://braingeneers
+
+push-to-s3:
+	aws --endpoint https://s3-west.nrp-nautilus.io s3 cp --no-verify-ssl test.h5ad  s3://braingeneers/cellxgene/

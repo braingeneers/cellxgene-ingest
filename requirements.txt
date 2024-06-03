@@ -3,4 +3,6 @@ ray==2.22.0
 remfile
 cellxgene-census==1.13.1
 
+jupyter
+jupyter-console
 ipython
