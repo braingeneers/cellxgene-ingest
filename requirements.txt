@@ -1,7 +1,9 @@
-ray==2.22.0
-# smart-open[s3]==7.0.4
-remfile
+python-dotenv
+awscli
+
 cellxgene-census==1.13.1
+
+ray==2.22.0
 
 jupyter
 jupyter-console
