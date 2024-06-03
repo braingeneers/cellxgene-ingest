@@ -70,4 +70,4 @@ ls-braingeneers-s3-bucket:
 	aws --endpoint https://s3-west.nrp-nautilus.io s3 ls --no-verify-ssl  s3://braingeneers
 
 push-to-s3:
-	aws --endpoint https://s3-west.nrp-nautilus.io s3 cp --no-verify-ssl test.h5ad  s3://braingeneers/cellxgene/
+	aws --endpoint https://s3-west.nrp-nautilus.io s3 sync --no-verify-ssl data/100x100/  s3://braingeneers/cellxgene/ --delete

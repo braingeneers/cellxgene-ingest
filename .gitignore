@@ -5,6 +5,7 @@ __pycache__/
 .env
 venv/
 data/
+data
 
 # If installed locally from source for older CPUs
 TileDB-SOMA/

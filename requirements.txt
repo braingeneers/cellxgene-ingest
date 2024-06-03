@@ -1,5 +1,6 @@
 python-dotenv
 awscli
+tqdm
 
 cellxgene-census==1.13.1
 
