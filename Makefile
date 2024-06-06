@@ -67,7 +67,10 @@ download-gene-list:
 	wget -N "https://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_46/gencode.v46.annotation.gtf.gz"
 
 ls-braingeneers-s3-bucket:
-	aws --endpoint https://s3-west.nrp-nautilus.io s3 ls --no-verify-ssl  s3://braingeneers
+	aws --endpoint https://s3-west.nrp-nautilus.io s3 ls s3://braingeneers
+	aws --endpoint https://s3-west.nrp-nautilus.io s3 ls s3://braingeneers
+
+	aws --endpoint https://s3-west.nrp-nautilus.io s3 ls  s3://braingeneers/personal/rcurrie/cellxgene/
 
 push-to-s3:
-	aws --endpoint https://s3-west.nrp-nautilus.io s3 sync --no-verify-ssl data/100x100/  s3://braingeneers/cellxgene/ --delete
+	aws --endpoint https://s3-west.nrp-nautilus.io s3 sync data/100x100/  s3://braingeneers/cellxgene/ --delete

@@ -2,33 +2,27 @@
 Generate an index of observations with meta data by querying cellxgene
 """
 
-import os
 import argparse
-import dotenv
-
 import cellxgene_census
 
-dotenv.load_dotenv("defaults.env")
-dotenv.load_dotenv(override=True)
-
-
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(
-        description=__doc__,
-        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
-    )
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--census-version", default="2023-12-15")
     parser.add_argument(
-        "-o", "--output", default="data/index.feather", help="Output index feather file"
+        "--value-filter",
+        default="tissue in ['heart', 'blood', 'brain', 'lung', 'kidney', 'intestine', 'pancreas']",
+        # default="disease=='normal' and suspension_type=='cell' and tissue in ['heart', 'blood', 'brain', 'lung', 'kidney', 'intestine', 'pancreas']",
     )
+    parser.add_argument("output", nargs="?", default="index.feather")
     args = parser.parse_args()
 
-    print("Querying cellxgene census using value_filter:\n", os.environ["VALUE_FILTER"])
+    print(
+        f"Querying census {args.census_version} with value_filter:\n{args.value_filter}"
+    )
 
-    with cellxgene_census.open_soma(
-        census_version=os.environ["CENSUS_VERSION"]
-    ) as census:
+    with cellxgene_census.open_soma(census_version=args.census_version) as census:
         cell_metadata = census["census_data"]["homo_sapiens"].obs.read(
-            value_filter=os.environ["VALUE_FILTER"],
+            value_filter=args.value_filter,
             column_names=[
                 "soma_joinid",
                 "assay",
