@@ -1,6 +1,7 @@
-python-dotenv
-awscli
 tqdm
+
+boto3
+awscli
 
 cellxgene-census==1.13.1
 
