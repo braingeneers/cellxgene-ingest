@@ -1,3 +1,0 @@
-{
-  "BIOCARTA_WNT_PATHWAY" : {"systematicName":"M16517","pmid":"","exactSource":"","geneSymbols":["APC","AXIN1","BTRC","CCND1","CREBBP","CSNK2A1","CTBP1","CTNNB1","DVL1","FRAT1","FZD1","GSK3B","HDAC1","HNF1A","MAP3K7","MYC","NLK","PPARD","PPP2CA","SMAD4","TAB1","TLE1","WIF1","WNT1"],"msigdbURL":"https://www.gsea-msigdb.org/gsea/msigdb/human/geneset/BIOCARTA_WNT_PATHWAY","externalDetailsURL":["https://data.broadinstitute.org/gsea-msigdb/msigdb/biocarta/human/h_wntPathway.gif"],"filteredBySimilarity":[],"externalNamesForSimilarTerms":[],"collection":"C2:CP:BIOCARTA"}
-}
