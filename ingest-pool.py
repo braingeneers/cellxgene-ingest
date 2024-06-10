@@ -1,17 +1,19 @@
 """
-Ingest cellxgene data and upload to s3 in parallel using ray disributed on k8s
+Ingest cellxgene data and upload to s3 in parallel using Ray with manual Actor management
 """
 
 import os
-import argparse
 from collections import Counter
+import argparse
 import pandas as pd
 import ray
+import tqdm
 
 import botocore
 import boto3
 import tempfile
 import cellxgene_census
+
 
 parser = argparse.ArgumentParser(
     description=__doc__,
@@ -29,21 +31,27 @@ parser.add_argument(
 parser.add_argument("dest", type=str, nargs="?", default="cellxgene")
 args = parser.parse_args()
 
+
+df = pd.read_feather(args.index, columns=["soma_joinid"])
+soma_ids = df.soma_joinid[0 : args.max_num_observations].values
+chunks = [
+    soma_ids[start_soma_id : start_soma_id + args.observations_per_file]
+    for start_soma_id in range(0, len(soma_ids), args.observations_per_file)
+]
+print(
+    f"Downloading {len(soma_ids):,} observations in {len(chunks):,} files to s3://{args.bucket}/{args.dest}/"
+)
+if args.gene_filter:
+    print(f"Filtering for genes: {args.gene_filter}")
+
 if ray.is_initialized():
     ray.shutdown()
 
 ray.init(num_cpus=args.max_parallel_downloads, ignore_reinit_error=True)
 
-df = pd.read_feather(args.index, columns=["soma_joinid"])
-ds = ray.data.from_pandas(df)
-if args.max_num_observations:
-    ds = ds.limit(args.max_num_observations)
-ds = ds.repartition(4 * args.max_parallel_downloads)
 
-
-class BatchIngestor:
-    """Download a batch of observations and upload as a single h5ad file to s3"""
-
+@ray.remote
+class IngestBatch(object):
     def __init__(self, args):
         self.args = args
         self.census = cellxgene_census.open_soma(census_version=args.census_version)
@@ -56,11 +64,12 @@ class BatchIngestor:
             return int(e.response["Error"]["Code"]) != 404
         return True
 
-    def __call__(self, batch: dict) -> dict:
-        key = f"{self.args.dest}/{str(batch['soma_joinid'][0])}-{str(batch['soma_joinid'][-1])}.h5ad"
+    def ingest(self, chunk):
+        key = f"{self.args.dest}/{str(chunk[0])}-{str(chunk[-1])}.h5ad"
         if self.exists(key):
             print(f"{key} exists, skipping.")
         else:
+            print(f"{os.getpid()} Downloading {chunk}...")
             if self.args.gene_filter:
                 genes = ",".join([f"'{g}'" for g in self.args.gene_filter.split(",")])
                 var_value_filter = f"feature_id in [{genes}]"
@@ -74,7 +83,7 @@ class BatchIngestor:
                     census=census,
                     organism="Homo sapiens",
                     var_value_filter=var_value_filter,
-                    obs_coords=batch["soma_joinid"],
+                    obs_coords=chunk,
                     column_names={
                         "obs": [
                             "soma_joinid",
@@ -91,18 +100,18 @@ class BatchIngestor:
                     anndata.write_h5ad(f.name)
                     s3 = boto3.client("s3")
                     s3.upload_file(f.name, "braingeneers", key)
-        return {
-            "id": batch["soma_joinid"],
-            "pid": [os.getpid() for _ in range(len(batch["soma_joinid"]))],
-        }
+        return (os.getpid(), chunk)
 
 
-results = ds.map_batches(
-    BatchIngestor,
-    zero_copy_batch=True,
-    batch_size=args.observations_per_file,
-    concurrency=(1, args.max_parallel_downloads),
-    fn_constructor_args=(args,),
-).take_all()
+print(f"Creating pool of {args.max_parallel_downloads} ray actors...")
+pool = ray.util.ActorPool(
+    [IngestBatch.remote(args) for _ in range(args.max_parallel_downloads)]
+)
 
-print(Counter([r["pid"] for r in results]))
+print("Ingesting...")
+results = list(
+    tqdm.tqdm(pool.map(lambda a, v: a.ingest.remote(v), chunks), total=len(chunks))
+)
+
+print("Done.")
+print("Samples per procss id:\n", Counter([r[0] for r in results]))
