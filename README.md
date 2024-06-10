@@ -34,17 +34,18 @@ git clone https://github.com/single-cell-data/TileDB-SOMA.git
 pip install -v -e TileDB-SOMA/apis/python
 ```
 
-## Ray
-Note: Not yet tested running in a remote Ray cluster, only local
-
-For local development get a [Ray Cluster Running](https://docs.ray.io/en/latest/cluster/kubernetes/getting-started/raycluster-quick-start.html#kuberay-raycluster-quickstart)
-
-[Interactive Ray Service development](https://docs.ray.io/en/latest/cluster/running-applications/job-submission/ray-client.html)
-
-
 # References
 [Cell x Gene](https://cellxgene.cziscience.com)
 
 [TileDB 101: Single Cell](https://tiledb.com/blog/tiledb-101-single-cell)
 
 [anndata - Annotated data](https://anndata.readthedocs.io)
+
+[Python and boto3 Performance Adventures: Synchronous vs Asynchronous AWS API Interaction](https://joelmccoy.medium.com/python-and-boto3-performance-adventures-synchronous-vs-asynchronous-aws-api-interaction-22f625ec6909)
+
+## Ray
+For local development get a [Ray Cluster Running](https://docs.ray.io/en/latest/cluster/kubernetes/getting-started/raycluster-quick-start.html#kuberay-raycluster-quickstart)
+
+[Interactive Ray Service development](https://docs.ray.io/en/latest/cluster/running-applications/job-submission/ray-client.html)
+
+For details on using Ray Actors vs. Data for processing see [Model Batch Inference in Ray: Actors, ActorPool, and Datasets](https://www.anyscale.com/blog/model-batch-inference-in-ray-actors-actorpool-and-datasets)

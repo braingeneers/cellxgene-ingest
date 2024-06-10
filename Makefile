@@ -16,6 +16,13 @@ open-ray-dashboard:
 	open http://127.0.0.1:8265
 
 
+ray-start:
+	# RAY_record_ref_creation_sites=1 ray start --include-dashboard=True --num-cpus=4 --head
+	ray start --include-dashboard=True --num-cpus=8 --head
+
+ray-stop:
+	ray stop
+
 ray-kind-cluster-up-osx:
 	# NRP is at v1.26.11 as of 05-18-2024
 	kind create cluster --image=kindest/node:v1.26.15

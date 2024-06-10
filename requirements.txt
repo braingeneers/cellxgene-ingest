@@ -4,8 +4,8 @@ tqdm
 
 cellxgene-census==1.13.1
 
-ray==2.22.0
+ray[default]==2.23.0
 
+ipython
 jupyter
 jupyter-console
-ipython
