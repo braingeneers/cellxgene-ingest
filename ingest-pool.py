@@ -3,7 +3,7 @@ Ingest cellxgene data and upload to s3 in parallel using Ray with manual Actor m
 """
 
 import os
-import time
+from collections import Counter
 import argparse
 import pandas as pd
 import ray
@@ -57,20 +57,19 @@ class IngestBatch(object):
         self.census = cellxgene_census.open_soma(census_version=args.census_version)
         self.s3 = boto3.client("s3")
 
-    def get_object_size(self, key):
-        """Return object size if exists, otherwise -1"""
+    def exists(self, key):
         try:
-            response = self.s3.head_object(Bucket=self.args.bucket, Key=key)
+            self.s3.head_object(Bucket=self.args.bucket, Key=key)
         except botocore.exceptions.ClientError as e:
-            return -1
-        return response["ContentLength"]
+            return int(e.response["Error"]["Code"]) != 404
+        return True
 
     def ingest(self, chunk):
         key = f"{self.args.dest}/{str(chunk[0])}-{str(chunk[-1])}.h5ad"
-        file_size = self.get_object_size(key)
-        if file_size >= 0:
+        if self.exists(key):
             print(f"{key} exists, skipping.")
         else:
+            # print(f"{os.getpid()} Downloading {chunk}...")
             if self.args.gene_filter:
                 genes = ",".join([f"'{g}'" for g in self.args.gene_filter.split(",")])
                 var_value_filter = f"feature_id in [{genes}]"
@@ -99,10 +98,9 @@ class IngestBatch(object):
                 )
                 with tempfile.NamedTemporaryFile() as f:
                     anndata.write_h5ad(f.name)
-                    file_size = os.path.getsize(f.name)
                     s3 = boto3.client("s3")
                     s3.upload_file(f.name, "braingeneers", key)
-        return (os.getpid(), file_size, chunk)
+        return (os.getpid(), chunk)
 
 
 print(f"Creating pool of {args.max_parallel_downloads} ray actors...")
@@ -110,17 +108,10 @@ pool = ray.util.ActorPool(
     [IngestBatch.remote(args) for _ in range(args.max_parallel_downloads)]
 )
 
-
 print("Ingesting...")
-start_time = time.time()
 results = list(
     tqdm.tqdm(pool.map(lambda a, v: a.ingest.remote(v), chunks), total=len(chunks))
 )
-end_time = time.time()
-print("Done.")
 
-elapsed_seconds = end_time - start_time
-print(f"{len(results):,} files ingested in {elapsed_seconds/60:.2f} minutes.")
-print(f"{elapsed_seconds/3600/len(soma_ids)*1e6:.2f} hours per 1M observations.")
-average_file_size = sum([r[1] for r in results]) / len(results)
-print(f"{average_file_size/1e6:.2f} MB average file size.")
+print("Done.")
+print("Samples per procss id:\n", Counter([r[0] for r in results]))
