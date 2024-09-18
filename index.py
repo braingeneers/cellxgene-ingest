@@ -10,7 +10,9 @@ if __name__ == "__main__":
     parser.add_argument("--census-version", default="2023-12-15")
     parser.add_argument(
         "--value-filter",
-        default="tissue in ['heart', 'blood', 'brain', 'lung', 'kidney', 'intestine', 'pancreas']",
+        # default="tissue in ['heart', 'blood', 'brain', 'lung', 'kidney', 'intestine', 'pancreas']",
+        default="disease=='normal' and tissue in ['heart', 'blood', 'brain', 'lung', 'kidney', 'intestine', 'pancreas']",
+        # Note: excluding nucleus suspension excludes most brain datasets...
         # default="disease=='normal' and suspension_type=='cell' and tissue in ['heart', 'blood', 'brain', 'lung', 'kidney', 'intestine', 'pancreas']",
     )
     parser.add_argument("output", nargs="?", default="index.feather")

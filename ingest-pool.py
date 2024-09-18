@@ -3,7 +3,7 @@ Ingest cellxgene data and upload to s3 in parallel using Ray with manual Actor m
 """
 
 import os
-from collections import Counter
+import time
 import argparse
 import pandas as pd
 import ray
@@ -66,6 +66,7 @@ class IngestBatch(object):
 
     def ingest(self, chunk):
         key = f"{self.args.dest}/{str(chunk[0])}-{str(chunk[-1])}.h5ad"
+        bytes_received = 0
         if self.exists(key):
             print(f"{key} exists, skipping.")
         else:
@@ -98,9 +99,10 @@ class IngestBatch(object):
                 )
                 with tempfile.NamedTemporaryFile() as f:
                     anndata.write_h5ad(f.name)
+                    bytes_received = os.path.getsize(f.name)
                     s3 = boto3.client("s3")
                     s3.upload_file(f.name, "braingeneers", key)
-        return (os.getpid(), chunk)
+        return (os.getpid(), bytes_received, chunk)
 
 
 print(f"Creating pool of {args.max_parallel_downloads} ray actors...")
@@ -109,9 +111,15 @@ pool = ray.util.ActorPool(
 )
 
 print("Ingesting...")
+start_time = time.time()
 results = list(
     tqdm.tqdm(pool.map(lambda a, v: a.ingest.remote(v), chunks), total=len(chunks))
 )
-
+end_time = time.time()
 print("Done.")
-print("Samples per procss id:\n", Counter([r[0] for r in results]))
+
+elapsed_seconds = end_time - start_time
+print(f"{len(results):,} files ingested in {elapsed_seconds/60:.2f} minutes.")
+print(f"{elapsed_seconds/3600/len(soma_ids)*1e6:.2f} hours per 1M observations.")
+average_file_size = sum([r[1] for r in results]) / len(results)
+print(f"{average_file_size/1e6:.2f} MB average file size.")
